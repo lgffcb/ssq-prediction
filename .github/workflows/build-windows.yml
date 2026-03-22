@@ -29,7 +29,45 @@ jobs:
         run: |
           pyinstaller --onefile --windowed --name ExcelExtractor excel_search_extract.py
       
-      - name: Upload EXE
+      - name: Get version from file
+        id: version
+        run: |
+          $version = "1.0.0"
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+      
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}-${{ github.run_number }}
+          name: ExcelExtractor v${{ steps.version.outputs.version }} Build ${{ github.run_number }}
+          body: |
+            ## Excel 数据提取工具
+            
+            ### 功能
+            - ✅ 支持 .xls 和 .xlsx 格式
+            - ✅ 自动查找包含"明细"的工作表
+            - ✅ 输入任意关键词查找
+            - ✅ 只提取包含关键词的列
+            - ✅ 图形界面，支持粘贴文件路径
+            
+            ### 使用方法
+            1. 下载并解压 ExcelExtractor.exe
+            2. 双击运行
+            3. 选择 Excel 文件
+            4. 输入查找内容（如：金星、管网等）
+            5. 点击"开始提取"
+            
+            ### 更新内容
+            - 自动构建版本 ${{ github.run_number }}
+            - 构建时间：${{ github.event.head_commit.timestamp }}
+          draft: false
+          prerelease: false
+          files: dist/ExcelExtractor.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload EXE artifact
         uses: actions/upload-artifact@v4
         with:
           name: ExcelExtractor-Windows

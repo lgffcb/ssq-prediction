@@ -1,0 +1,70 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl pyinstaller xlrd pywin32
+      
+      - name: Build EXE
+        run: |
+          pyinstaller --onefile --windowed --name ExcelExtractor excel_search_extract.py
+          pyinstaller --onefile --windowed --hidden-import=xlrd --name ExcelExtractor excel_search_extract.py
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: ExcelExtractor v1.0.${{ github.run_number }} (支持.xls 和.xlsx)
+          body: |
+            ## Excel 数据提取工具 v4
+            
+            ### ✨ 新功能
+            - ✅ 支持 .xls (Excel 97-2003) 格式
+            - ✅ 支持 .xlsx (Excel 2007+) 格式
+            - ✅ 自动查找包含"明细"的工作表
+            - ✅ 输入任意关键词查找
+            - ✅ 只提取包含关键词的列
+            - ✅ 图形界面，支持粘贴文件路径
+            
+            ### 📋 使用方法
+            1. 下载 ExcelExtractor.exe
+            2. 双击运行
+            3. 选择 Excel 文件（.xls 或.xlsx）
+            4. 输入查找内容（如：金星、管网等）
+            5. 点击"开始提取"
+            
+            ### 🔧 更新内容
+            - 添加 xlrd 库支持.xls 格式
+            - 优化文件类型检测
+            - 改进错误提示
+            
+            ### 📦 构建信息
+            - 构建版本：${{ github.run_number }}
+            - 构建时间：${{ github.event.head_commit.timestamp }}
+          files: dist/ExcelExtractor.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
