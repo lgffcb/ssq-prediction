@@ -2,42 +2,35 @@ name: Build Windows EXE
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pandas openpyxl pyinstaller
-    
-    - name: Build EXE with PyInstaller
-      run: |
-        pyinstaller --onefile --name ExcelExtractor --icon=NONE excel_search_extract.py
-    
-    - name: Upload EXE artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ExcelExtractor-Windows
-        path: dist/ExcelExtractor.exe
-    
-    - name: Create Release (if tag push)
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
-      with:
-        files: dist/ExcelExtractor.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas openpyxl pyinstaller
+          pip install pywin32
+      
+      - name: Build EXE with GUI
+        run: |
+          pyinstaller --onefile --windowed --name ExcelExtractor excel_search_extract.py
+      
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExcelExtractor-Windows
+          path: dist/ExcelExtractor.exe
