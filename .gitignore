@@ -49,3 +49,29 @@ email_body*.txt
 # Build artifacts
 *.zip
 *.exe
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# App folder
+app/
+skills/
+tools/
+temp/
+memory/
+output/
+config/
+
+# Project files
+AGENTS.md
+SOUL.md
+USER.md
+MEMORY.md
+TOOLS.md
+HEARTBEAT.md
+IDENTITY.md
+.openclaw/
