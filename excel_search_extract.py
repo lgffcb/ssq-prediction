@@ -230,26 +230,11 @@ class ExcelExtractorApp:
                 # 转换为 DataFrame
                 df = pd.read_excel(file_path, sheet_name=target_sheet)
             
-            # 2. 搜索
-            self.log(f"\n🔍 正在搜索包含'{search_term}'的行...")
+            # 2. 找出包含查找内容的列
+            self.log(f"\n🔍 正在分析包含'{search_term}'的列...")
             self.root.update()
             
             df_str = df.astype(str)
-            mask = df_str.apply(lambda col: col.str.contains(str(search_term), na=False, case=False)).any(axis=1)
-            matched_rows = df[mask]
-            
-            if len(matched_rows) == 0:
-                self.log(f"❌ 未找到包含'{search_term}'的行")
-                messagebox.showwarning("提示", f"未找到包含'{search_term}'的行")
-                self.start_btn.config(state=tk.NORMAL)
-                return
-            
-            self.log(f"✅ 找到 {len(matched_rows)} 条匹配记录")
-            
-            # 3. 找出包含查找内容的列
-            self.log(f"\n📊 正在分析包含'{search_term}'的列...")
-            self.root.update()
-            
             columns_to_extract = []
             column_names = []
             
@@ -259,19 +244,21 @@ class ExcelExtractorApp:
                     col_letter = self.get_column_letter(col_idx)
                     col_name = str(df.columns[col_idx]) if col_idx < len(df.columns) else f"列{col_idx}"
                     columns_to_extract.append(col_idx)
-                    column_names.append(f'{col_letter}列')
-                    sample_val = col_data[col_data.str.contains(str(search_term), na=False, case=False)].iloc[0] if len(col_data[col_data.str.contains(str(search_term), na=False, case=False)]) > 0 else ''
-                    self.log(f"   ✅ {col_letter}列 ({str(col_name)[:40]}) - 示例：{str(sample_val)[:40]}")
+                    column_names.append(f'{col_letter}列：{col_name}')
+                    # 统计该列有多少行包含查找内容
+                    match_count = col_data.str.contains(str(search_term), na=False, case=False).sum()
+                    self.log(f"   ✅ {col_letter}列 ({str(col_name)[:40]}) - {match_count}行包含'{search_term}'")
             
             if not columns_to_extract:
-                self.log("❌ 没有找到包含查找内容的列")
+                self.log(f"❌ 没有找到包含'{search_term}'的列")
+                messagebox.showwarning("提示", f"未找到包含'{search_term}'的列")
                 self.start_btn.config(state=tk.NORMAL)
                 return
             
             self.log(f"\n✅ 共 {len(columns_to_extract)} 列包含查找内容")
             
-            # 4. 提取数据
-            result = matched_rows.iloc[:, columns_to_extract].copy()
+            # 3. 提取数据 - 提取所有行的整列数据
+            result = df.iloc[:, columns_to_extract].copy()
             result.columns = column_names
             
             # 5. 保存
@@ -284,7 +271,7 @@ class ExcelExtractorApp:
             self.log(f"📊 提取结果：{len(result)} 行 × {len(result.columns)} 列")
             
             self.open_folder_btn.config(state=tk.NORMAL)
-            messagebox.showinfo("成功", f"数据提取完成！\n\n找到 {len(matched_rows)} 条记录\n提取 {len(columns_to_extract)} 列\n\n结果已保存到:\n{self.result_file_path}")
+            messagebox.showinfo("成功", f"数据提取完成！\n\n提取 {len(columns_to_extract)} 列的完整数据\n共 {len(result)} 行\n\n结果已保存到:\n{self.result_file_path}")
             
         except Exception as e:
             self.log(f"\n❌ 错误：{str(e)}")

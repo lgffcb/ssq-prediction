@@ -82,20 +82,9 @@ def extract_data(file_path, search_term):
         
         df = pd.read_excel(file_path, sheet_name=target_sheet)
     
-    # 搜索
-    print(f"\n🔍 正在搜索包含'{search_term}'的行...")
-    df_str = df.astype(str)
-    mask = df_str.apply(lambda col: col.str.contains(str(search_term), na=False, case=False)).any(axis=1)
-    matched_rows = df[mask]
-    
-    if len(matched_rows) == 0:
-        print(f"❌ 未找到包含'{search_term}'的行")
-        return None
-    
-    print(f"✅ 找到 {len(matched_rows)} 条匹配记录")
-    
     # 找出包含查找内容的列
-    print(f"\n📊 正在分析包含'{search_term}'的列...")
+    print(f"\n🔍 正在分析包含'{search_term}'的列...")
+    df_str = df.astype(str)
     columns_to_extract = []
     column_names = []
     
@@ -105,19 +94,19 @@ def extract_data(file_path, search_term):
             col_letter = get_column_letter(col_idx)
             col_name = str(df.columns[col_idx]) if col_idx < len(df.columns) else f"列{col_idx}"
             columns_to_extract.append(col_idx)
-            column_names.append(f'{col_letter}列')
-            # 显示列名和示例值
-            sample_val = col_data[col_data.str.contains(str(search_term), na=False, case=False)].iloc[0] if len(col_data[col_data.str.contains(str(search_term), na=False, case=False)]) > 0 else ''
-            print(f"   ✅ {col_letter}列 ({col_name[:50]}) - 示例：{str(sample_val)[:50]}")
+            column_names.append(f'{col_letter}列：{col_name}')
+            # 统计该列有多少行包含查找内容
+            match_count = col_data.str.contains(str(search_term), na=False, case=False).sum()
+            print(f"   ✅ {col_letter}列 ({col_name[:50]}) - {match_count}行包含'{search_term}'")
     
     if not columns_to_extract:
-        print("❌ 没有找到包含查找内容的列")
+        print(f"❌ 没有找到包含'{search_term}'的列")
         return None
     
     print(f"\n✅ 共 {len(columns_to_extract)} 列包含查找内容")
     
-    # 提取数据
-    result = matched_rows.iloc[:, columns_to_extract].copy()
+    # 提取数据 - 提取所有行的整列数据
+    result = df.iloc[:, columns_to_extract].copy()
     result.columns = column_names
     
     # 保存
@@ -127,7 +116,7 @@ def extract_data(file_path, search_term):
     print(f"\n{'='*60}")
     print("✅ 数据提取完成！")
     print(f"📁 结果已保存到：{output_file}")
-    print(f"📊 提取结果：{len(result)} 行 × {len(result.columns)} 列")
+    print(f"📊 提取结果：{len(result)} 行 × {len(result.columns)} 列（提取整列数据）")
     
     # 显示前 5 行
     print("\n前 5 行数据预览:")
