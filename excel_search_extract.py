@@ -263,6 +263,23 @@ class ExcelExtractorApp:
             
             # 5. 保存
             self.result_file_path = os.path.splitext(file_path)[0] + '_提取结果.xlsx'
+            
+            # 检查文件是否被占用
+            if os.path.exists(self.result_file_path):
+                try:
+                    # 尝试删除旧文件（如果文件被 Excel 打开会失败）
+                    os.remove(self.result_file_path)
+                except PermissionError:
+                    self.log(f"\n❌ 错误：结果文件已被打开")
+                    self.log(f"   文件：{self.result_file_path}")
+                    self.log(f"   请先关闭打开此文件的 Excel 窗口，然后重试")
+                    messagebox.showerror("错误", 
+                        f"结果文件已被其他程序打开！\n\n"
+                        f"文件：{self.result_file_path}\n\n"
+                        f"请关闭打开此文件的 Excel 窗口，然后重新提取。")
+                    self.start_btn.config(state=tk.NORMAL)
+                    return
+            
             result.to_excel(self.result_file_path, index=False)
             
             self.log(f"\n{'='*60}")

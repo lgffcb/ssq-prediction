@@ -111,6 +111,17 @@ def extract_data(file_path, search_term):
     
     # 保存
     output_file = os.path.splitext(file_path)[0] + '_提取结果.xlsx'
+    
+    # 检查文件是否被占用
+    if os.path.exists(output_file):
+        try:
+            os.remove(output_file)
+        except PermissionError:
+            print(f"\n❌ 错误：结果文件已被 Excel 打开")
+            print(f"   文件：{output_file}")
+            print(f"   请先关闭 Excel 中的此文件，然后重试")
+            return None
+    
     result.to_excel(output_file, index=False)
     
     print(f"\n{'='*60}")
