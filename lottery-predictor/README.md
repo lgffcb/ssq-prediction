@@ -100,6 +100,7 @@ python fetch_history_17500.py
 ## 📄 文档
 
 - [QUICK_START.md](QUICK_START.md) - 快速参考
+- [DATA_FORMAT.md](DATA_FORMAT.md) - 数据格式说明（仅 CSV）
 - [GitHub Actions](https://github.com/lgffcb/ssq-prediction/actions) - 自动构建
 - [Releases](https://github.com/lgffcb/ssq-prediction/releases) - 下载 EXE
 
