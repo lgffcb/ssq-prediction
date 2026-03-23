@@ -1,0 +1,133 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build SSQ Predictor (GUI)
+        run: |
+          pyinstaller --onefile --windowed --name SSQ_Predictor ssq_predictor.py
+      
+      - name: Build SSQ CLI
+        run: |
+          pyinstaller --onefile --name SSQ_CLI ssq_predictor.py
+      
+      - name: Build SSQ Update
+        run: |
+          pyinstaller --onefile --name SSQ_Update ssq_update.py
+      
+      - name: Build Fetch Data
+        run: |
+          pyinstaller --onefile --name SSQ_Fetch fetch_data.py
+      
+      - name: Create Release Package
+        run: |
+          mkdir release_package
+          cp dist/SSQ_Predictor.exe release_package/
+          cp dist/SSQ_CLI.exe release_package/
+          cp dist/SSQ_Update.exe release_package/
+          cp dist/SSQ_Fetch.exe release_package/
+          cp README.md release_package/
+          cp DATA_FORMAT.md release_package/
+          cp requirements.txt release_package/
+          cp historical_data.csv release_package/
+          Compress-Archive -Path release_package/* -DestinationPath SSQ_Predictor_Windows.zip
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: 双色球预测软件 ${{ github.ref_name }}
+          body: |
+            ## 🎱 双色球预测软件 ${{ github.ref_name }}
+            
+            ### ✨ 功能特性
+            - ✅ 3428 期真实历史数据（2003-2026）
+            - ✅ 6 种概率分布分析
+            - ✅ LSTM 深度学习预测
+            - ✅ 自动更新数据
+            - ✅ GUI 图形界面
+            - ✅ 命令行工具
+            - ✅ 纯 CSV 数据格式（无 Excel）
+            
+            ### 📦 包含文件
+            - `SSQ_Predictor.exe` - GUI 图形界面版（推荐）
+            - `SSQ_CLI.exe` - 命令行预测版
+            - `SSQ_Update.exe` - 数据自动更新工具
+            - `SSQ_Fetch.exe` - 数据获取工具
+            - `historical_data.csv` - 3428 期历史数据
+            - `README.md` - 使用说明
+            - `DATA_FORMAT.md` - 数据格式说明
+            
+            ### 🚀 使用方法
+            
+            #### 方式一：GUI 界面（推荐）
+            1. 双击运行 `SSQ_Predictor.exe`
+            2. 点击"开始预测"
+            3. 查看预测结果
+            
+            #### 方式二：命令行
+            ```bash
+            # 预测号码
+            SSQ_CLI.exe
+            
+            # 更新数据
+            SSQ_Update.exe
+            
+            # 获取数据
+            SSQ_Fetch.exe
+            ```
+            
+            ### 📊 数据来源
+            - 数据源：17500 彩票网
+            - 数据量：3428 期（2003-2026）
+            - 数据格式：CSV（唯一格式）
+            - 自动更新：每天 9:00
+            
+            ### ⚠️ 免责声明
+            本软件仅供娱乐和统计研究，不保证中奖！
+            请理性购彩，量力而行！
+            不涉及任何 Excel 表格提取功能！
+            
+            ### 🔗 相关链接
+            - GitHub: https://github.com/lgffcb/ssq-prediction
+            - 问题反馈：https://github.com/lgffcb/ssq-prediction/issues
+            
+            ---
+            **构建时间:** ${{ github.event.head_commit.timestamp }}
+            **版本号:** ${{ github.ref_name }}
+          files: SSQ_Predictor_Windows.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload EXE artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SSQ-Windows-EXE
+          path: dist/*.exe
