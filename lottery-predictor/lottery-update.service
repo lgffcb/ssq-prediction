@@ -1,0 +1,13 @@
+[Unit]
+Description=双色球数据自动更新服务
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/admin/openclaw/workspace/lottery-predictor
+ExecStart=/usr/bin/python3 /home/admin/openclaw/workspace/lottery-predictor/auto_update.py -f data/historical_data.csv -s mock -i daily
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
